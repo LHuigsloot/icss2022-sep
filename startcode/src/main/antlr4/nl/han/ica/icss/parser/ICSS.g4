@@ -45,5 +45,34 @@ ASSIGNMENT_OPERATOR: ':=';
 
 
 //--- PARSER: ---
-stylesheet: EOF;
 
+stylesheet: ( variableAssignment | styleRule )+ | EOF;
+
+//global
+colorLiteral: COLOR;
+percentageLiteral: PERCENTAGE;
+pixelLiteral: PIXELSIZE;
+boolLiteral: TRUE | FALSE;
+scalarLiteral: SCALAR;
+literal: colorLiteral | percentageLiteral | pixelLiteral | boolLiteral | scalarLiteral;
+declaration: OPEN_BRACE ( properties | ifClause )+ CLOSE_BRACE;
+
+//Variables
+variableAssignment: variableReference ASSIGNMENT_OPERATOR literal SEMICOLON;
+variableReference: CAPITAL_IDENT;
+
+//Operations
+expression: expression ('*') expression | expression ('+' | '-') expression | (literal | variableReference) | '('expression')';
+
+//CSS Rules
+styleRule: selector declaration;
+selector: tagSelector | idSelector | classSelector;
+tagSelector: LOWER_IDENT;
+idSelector: ID_IDENT;
+classSelector: CLASS_IDENT;
+properties: propertyName COLON ( literal | variableReference | expression ) SEMICOLON;
+propertyName: LOWER_IDENT;
+
+//if-statements
+ifClause: IF BOX_BRACKET_OPEN (boolLiteral | variableReference) BOX_BRACKET_CLOSE declaration elseClause?;
+elseClause: ELSE declaration;
