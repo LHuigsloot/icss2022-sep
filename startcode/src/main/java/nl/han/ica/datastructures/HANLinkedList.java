@@ -27,6 +27,7 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
 
         if(startNode.link != null){
 
+
         }
     }
 

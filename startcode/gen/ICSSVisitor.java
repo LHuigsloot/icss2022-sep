@@ -52,12 +52,6 @@ public interface ICSSVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitLiteral(ICSSParser.LiteralContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#declaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDeclaration(ICSSParser.DeclarationContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link ICSSParser#variableAssignment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -70,11 +64,29 @@ public interface ICSSVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVariableReference(ICSSParser.VariableReferenceContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#expression}.
+	 * Visit a parse tree produced by {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExpression(ICSSParser.ExpressionContext ctx);
+	T visitOperation(ICSSParser.OperationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#multiplyOperation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMultiplyOperation(ICSSParser.MultiplyOperationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#addOperation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAddOperation(ICSSParser.AddOperationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#substractOperation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSubstractOperation(ICSSParser.SubstractOperationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ICSSParser#styleRule}.
 	 * @param ctx the parse tree
@@ -106,11 +118,11 @@ public interface ICSSVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitClassSelector(ICSSParser.ClassSelectorContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#properties}.
+	 * Visit a parse tree produced by {@link ICSSParser#declaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitProperties(ICSSParser.PropertiesContext ctx);
+	T visitDeclaration(ICSSParser.DeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ICSSParser#propertyName}.
 	 * @param ctx the parse tree
