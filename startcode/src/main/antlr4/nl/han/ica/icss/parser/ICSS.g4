@@ -57,17 +57,17 @@ scalarLiteral: SCALAR;
 literal: colorLiteral | percentageLiteral | pixelLiteral | boolLiteral | scalarLiteral;
 
 //Variables
-variableAssignment: variableReference ASSIGNMENT_OPERATOR literal SEMICOLON;
+variableAssignment: variableReference SEMICOLON | variableReference ASSIGNMENT_OPERATOR (literal | operation) SEMICOLON;
 variableReference: CAPITAL_IDENT;
 
 //Operations
-operation: operation multiplyOperation operation|  operation (addOperation | substractOperation) operation  | (literal | variableReference);// | '('operation')';
+operation: operation multiplyOperation operation |  operation (addOperation | substractOperation) operation  | (literal | variableReference) | '('operation')';
 multiplyOperation: MUL ;
 addOperation: PLUS ;
 substractOperation: MIN ;
 
 //CSS Rules
-styleRule: selector OPEN_BRACE (declaration | ifClause)+ CLOSE_BRACE;
+styleRule: selector OPEN_BRACE (declaration | ifClause | variableAssignment)+ CLOSE_BRACE;
 selector: tagSelector | idSelector | classSelector;
 tagSelector: LOWER_IDENT;
 idSelector: ID_IDENT;

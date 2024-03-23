@@ -9,8 +9,10 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
         newNode.value = value;
         if (startNode != null) {
             newNode.link = startNode;
+            startNode = newNode;
+        } else {
+            startNode = newNode;
         }
-        startNode = newNode;
     }
 
     @Override
@@ -20,42 +22,36 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
 
     @Override
     public void insert(int index, T value) {
+        HANLinkedListIterator<T> previous = findPreviousOnPos( index );
         HANLinkedListNode<T> newNode = new HANLinkedListNode<T>();
         newNode.value = value;
 
-        int count = 0;
-
-        if(startNode.link != null){
-
-
+        if(previous.current.link != null){
+            newNode.link = previous.current.link;
+            previous.current.link = newNode;
         }
     }
 
     @Override
     public void delete(int pos) {
-        HANLinkedListIterator<T> previous = findPrevious( pos );
+        HANLinkedListIterator<T> previous = findPreviousOnPos( pos );
 
         if(previous.current.link != null){
             previous.current.link = previous.current.link.link;
         }
     }
 
-    public HANLinkedListIterator<T> findPrevious(int pos){
-        HANLinkedListNode<T> itr = startNode;
-
-        while ( itr.link != null && !itr.link.value.equals(pos)){
-            itr = itr.link;
-        }
-
-        return new HANLinkedListIterator<T>(itr);
-    }
-
     @Override
     public T get(int pos) {
-        HANLinkedListNode<T> itr = startNode.link;
+        if(pos > getSize()){
+            throw new RuntimeException("out of bounds");
+        }
+        HANLinkedListNode<T> itr = startNode;
+        int count = 0;
 
-        while (itr != null && !itr.value.equals( pos )){
+        while (itr.link != null && count != pos ){
             itr = itr.link;
+            count++;
         }
 
         return itr.value;
@@ -73,6 +69,50 @@ public class HANLinkedList<T> implements IHANLinkedList<T> {
 
     @Override
     public int getSize() {
-        return 0;
+        HANLinkedListNode<T> itr = startNode;
+        int count = 0;
+        if(itr != null) {
+            count++;
+            while (itr.link != null) {
+                itr = itr.link;
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public HANLinkedListIterator<T> findPreviousOnPos(int pos){
+        HANLinkedListNode<T> itr = startNode;
+        int count = 0;
+
+        while ( itr.link != null && count != pos){
+            itr = itr.link;
+            count++;
+        }
+
+        return new HANLinkedListIterator<T>(itr);
+    }
+
+    public boolean checkForValue(T value){
+        if(startNode != null) {
+            HANLinkedListNode<T> itr = startNode;
+
+            while (itr.link != null && itr.value.equals(value)) {
+                itr = itr.link;
+            }
+            return itr.value.equals(value);
+        }
+        return false;
+    }
+
+    public int getPos(T value){
+        HANLinkedListNode<T> itr = startNode;
+        int count = 0;
+
+        while (itr.link != null && itr.value != value){
+            count++;
+        }
+
+        return count;
     }
 }
