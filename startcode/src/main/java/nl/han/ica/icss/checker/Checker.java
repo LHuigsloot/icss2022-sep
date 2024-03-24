@@ -15,15 +15,22 @@ import java.util.HashMap;
 public class Checker {
 
     private IHANLinkedList<HashMap<String, ExpressionType>> variableTypes;
-    private ASTNode currentNode;
+    private boolean variableAssignmentBranch;
 
     public void check(AST ast) {
         variableTypes = new HANLinkedList<>();
-        currentNode = new ASTNode();
+        variableAssignmentBranch = false;
         checkSemantics(ast.root);
     }
 
     private void checkSemantics(ASTNode node){
+        if(node instanceof Stylesheet | node instanceof Stylerule | node instanceof IfClause ) {
+            variableTypes.addFirst(new HashMap<String, ExpressionType>());
+        }
+        if(node instanceof VariableAssignment){
+            variableAssignmentBranch = true;
+        }
+
         checkVariables(node);
         checkDeclaration(node);
         checkOperationForColorType(node);
@@ -35,28 +42,27 @@ public class Checker {
                 checkSemantics(childNode);
             }
         }
+
+        if(node instanceof Stylesheet | node instanceof Stylerule | node instanceof IfClause ) {
+            variableTypes.removeFirst();
+        }
+        if(node instanceof VariableAssignment){
+            variableAssignmentBranch = false;
+        }
     }
 
     //Controleer of een variabel een ASS heeft
     private void checkVariables(ASTNode variable){
         if(variable instanceof VariableAssignment) {
-            currentNode = variable;
             if (((VariableAssignment) variable).expression != null) {
-                HashMap<String, ExpressionType> assignedVariable = new HashMap();
                 ExpressionType expression = getExpressionTypeFromNode(((VariableAssignment) variable).expression);
-                assignedVariable.put(variable.getChildren().get(0).getNodeLabel(), expression);
-                variableTypes.addFirst(assignedVariable);
+                variableTypes.getFirst().put(variable.getChildren().get(0).getNodeLabel(), expression);
             }
         }
-        if(variable instanceof VariableReference & !(currentNode instanceof VariableAssignment) ) {
-            ExpressionType expression = null;
-            for (int i = 0; i < variableTypes.getSize(); i++){
-                if(variableTypes.get(i).containsKey(variable.getNodeLabel())){
-                    expression = variableTypes.get(i).get(variable.getNodeLabel());
-                }
-            }
-            if (expression == null) {
-                variable.setError("HEY! Deze variabel is nog helemaal niet gedefineerd maat XoXo");
+        if(variable instanceof VariableReference & !variableAssignmentBranch) {
+            ExpressionType expression = getExpressionTypeFromVariableReference(variable);
+            if (expression == ExpressionType.UNDEFINED) {
+                variable.setError("HEY! Deze variabel is nog helemaal niet gedefineerd maat XoXo - gossipgirl");
             }
         }
     }
@@ -64,7 +70,6 @@ public class Checker {
     //Check if de gegeven waarde van een property van de juiste type is.
     private void checkDeclaration(ASTNode declaration){
         if(declaration instanceof Declaration){
-            currentNode = declaration;
             String propertyName = ((Declaration) declaration).property.name;
             ExpressionType expression = getExpressionTypeFromNode(((Declaration) declaration).expression);
 
@@ -115,11 +120,11 @@ public class Checker {
     }
 
     //Check of een if-statement een boolean is.
-    private void checkIfClauseForBoolean(ASTNode ifCLause){
-        if(ifCLause instanceof IfClause){
-            ExpressionType expressionType = getExpressionTypeFromNode(((IfClause) ifCLause).getConditionalExpression());
+    private void checkIfClauseForBoolean(ASTNode ifClause){
+        if(ifClause instanceof IfClause){
+            ExpressionType expressionType = getExpressionTypeFromNode(((IfClause) ifClause).getConditionalExpression());
             if(expressionType != ExpressionType.BOOL){
-                ifCLause.setError("Conditie is geen BOOLean");
+                ifClause.setError("Conditie is geen BOOLean");
             }
         }
     }
@@ -127,23 +132,22 @@ public class Checker {
     //Check de scope van een variabel
 
     private ExpressionType getExpressionTypeFromNode(ASTNode node){
-       ExpressionType expressionType;
-       expressionType = getExpressionTypeLiteral(node);
+       ExpressionType expressionType = getExpressionTypeLiteral(node);
        if(expressionType == ExpressionType.UNDEFINED) {
            expressionType = getExpressionTypeFromVariableReference(node);
        }
        if(expressionType == ExpressionType.UNDEFINED)  {
            expressionType = getExpressionTypeFromOperation(node);
        }
-
        return expressionType;
     }
 
     private ExpressionType getExpressionTypeFromVariableReference(ASTNode variableReference){
         ExpressionType expression = ExpressionType.UNDEFINED;
         for (int i = 0; i < variableTypes.getSize(); i++){
-            if(variableTypes.get(i).containsKey(variableReference.getNodeLabel())){
+            if(variableTypes.get(i).containsKey(variableReference.getNodeLabel())) {
                 expression = variableTypes.get(i).get((variableReference.getNodeLabel()));
+                break;
             }
         }
         return expression;
@@ -179,5 +183,4 @@ public class Checker {
         }
     }
 
-    
 }
