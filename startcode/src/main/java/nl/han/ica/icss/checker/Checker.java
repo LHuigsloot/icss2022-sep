@@ -27,16 +27,14 @@ public class Checker {
         if(node instanceof Stylesheet | node instanceof Stylerule | node instanceof IfClause ) {
             variableTypes.addFirst(new HashMap<String, ExpressionType>());
         }
-        if(node instanceof VariableAssignment){
-            variableAssignmentBranch = true;
-        }
 
         checkVariables(node);
-        checkDeclaration(node);
         checkOperationForColorType(node);
         checkAddOrSubtractOperationForExpressionType(node);
         checkMultiplyOperationForScalar(node);
         checkIfClauseForBoolean(node);
+        checkDeclaration(node);
+
         for(ASTNode childNode: node.getChildren()){
             if(!node.getChildren().isEmpty()) {
                 checkSemantics(childNode);
@@ -45,9 +43,6 @@ public class Checker {
 
         if(node instanceof Stylesheet | node instanceof Stylerule | node instanceof IfClause ) {
             variableTypes.removeFirst();
-        }
-        if(node instanceof VariableAssignment){
-            variableAssignmentBranch = false;
         }
     }
 
@@ -59,10 +54,10 @@ public class Checker {
                 variableTypes.getFirst().put(variable.getChildren().get(0).getNodeLabel(), expression);
             }
         }
-        if(variable instanceof VariableReference & !variableAssignmentBranch) {
+        if(variable instanceof VariableReference) {
             ExpressionType expression = getExpressionTypeFromVariableReference(variable);
             if (expression == ExpressionType.UNDEFINED) {
-                variable.setError("HEY! Deze variabel is nog helemaal niet gedefineerd maat XoXo - gossipgirl");
+                variable.setError("Variabel ongedefinieerd");
             }
         }
     }
@@ -77,13 +72,14 @@ public class Checker {
                 case "width":
                 case "height":
                     if (expression != ExpressionType.PERCENTAGE & expression != ExpressionType.PIXEL) {
-                        declaration.setError("Alleen px of %");
+                        declaration.setError("Alleen px of % in width of height");
+                        System.out.println(expression);
                     }
                     break;
                 case "color":
                 case "background-color":
                     if (expression != ExpressionType.COLOR) {
-                        declaration.setError("Alleen hex kleur codes >:(");
+                        declaration.setError("Alleen hex-codes in color of background-color");
                     }
                     break;
             }
@@ -95,17 +91,19 @@ public class Checker {
         if(operation instanceof Operation){
             for (ASTNode child: operation.getChildren()) {
                 if (child instanceof ColorLiteral) {
-                    operation.setError("Kan niet rekenen met kleuren");
+                    operation.setError("Geen hex-codes in sommen");
                 }
             }
         }
     }
-
+    //hiero
     //Check of een optelling of aftrekking van hetzelfde is.
     private void checkAddOrSubtractOperationForExpressionType(ASTNode addOrSubtractOperation){
         if(addOrSubtractOperation instanceof AddOperation || addOrSubtractOperation instanceof SubtractOperation){
-            if(getExpressionTypeFromNode(((Operation) addOrSubtractOperation).lhs) != getExpressionTypeFromNode(((Operation) addOrSubtractOperation).rhs)){
-                addOrSubtractOperation.setError("Fakka niffoe wat denk jij px + px of % + %, anders nie");
+            if(getExpressionTypeFromNode(((Operation) addOrSubtractOperation).lhs) != getExpressionTypeFromNode(((Operation) addOrSubtractOperation).rhs)
+                    & !(((Operation) addOrSubtractOperation).rhs instanceof MultiplyOperation)
+                    & !(((Operation) addOrSubtractOperation).lhs instanceof MultiplyOperation)){
+                addOrSubtractOperation.setError(" +/- sommen alleen met gelijke px of %");
             }
         }
     }
@@ -114,7 +112,7 @@ public class Checker {
     private void checkMultiplyOperationForScalar(ASTNode multiplyOperation){
         if(multiplyOperation instanceof MultiplyOperation){
             if(getExpressionTypeFromNode(((MultiplyOperation) multiplyOperation).rhs) != ExpressionType.SCALAR & getExpressionTypeFromNode(((MultiplyOperation) multiplyOperation).lhs) != ExpressionType.SCALAR) {
-                multiplyOperation.setError("ER ZIT GEEN SCALAR IN JE KEERSOM");
+                multiplyOperation.setError("* som bevat geen scalar");
             }
         }
     }
@@ -124,12 +122,10 @@ public class Checker {
         if(ifClause instanceof IfClause){
             ExpressionType expressionType = getExpressionTypeFromNode(((IfClause) ifClause).getConditionalExpression());
             if(expressionType != ExpressionType.BOOL){
-                ifClause.setError("Conditie is geen BOOLean");
+                ifClause.setError("Conditie is geen boolean");
             }
         }
     }
-
-    //Check de scope van een variabel
 
     private ExpressionType getExpressionTypeFromNode(ASTNode node){
        ExpressionType expressionType = getExpressionTypeLiteral(node);
@@ -155,12 +151,21 @@ public class Checker {
 
     private ExpressionType getExpressionTypeFromOperation(ASTNode operation){
         ExpressionType expression = ExpressionType.UNDEFINED;
-        if(operation instanceof Operation){
-            for(ASTNode child: operation.getChildren()){
-                if(child instanceof Literal){
-                    expression = getExpressionTypeLiteral(child);
-                } else if (child instanceof VariableReference){
-                    expression = getExpressionTypeFromVariableReference(child);
+        if(operation instanceof Operation) {
+            if (((Operation) operation).lhs instanceof VariableReference) {
+                expression = getExpressionTypeFromVariableReference(((Operation) operation).lhs);
+            } else if (((Operation) operation).lhs instanceof Operation) {
+                expression = getExpressionTypeFromOperation(((Operation) operation).lhs);
+            } else {
+                expression = getExpressionTypeLiteral(((Operation) operation).lhs);
+            }
+            if (expression == ExpressionType.UNDEFINED || expression == ExpressionType.SCALAR) {
+                if (((Operation) operation).rhs instanceof VariableReference) {
+                    expression = getExpressionTypeFromVariableReference(((Operation) operation).rhs);
+                } else if (((Operation) operation).rhs instanceof Operation) {
+                    expression = getExpressionTypeFromOperation(((Operation) operation).rhs);
+                } else {
+                    expression = getExpressionTypeLiteral(((Operation) operation).rhs);
                 }
             }
         }

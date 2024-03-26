@@ -67,7 +67,7 @@ addOperation: PLUS ;
 substractOperation: MIN ;
 
 //CSS Rules
-styleRule: selector OPEN_BRACE (declaration | ifClause | variableAssignment)+ CLOSE_BRACE;
+styleRule: selector OPEN_BRACE (declaration | ifClause | variableAssignment)* CLOSE_BRACE;
 selector: tagSelector | idSelector | classSelector;
 tagSelector: LOWER_IDENT;
 idSelector: ID_IDENT;
@@ -76,5 +76,5 @@ declaration: propertyName COLON ( literal | variableReference | operation ) SEMI
 propertyName: LOWER_IDENT;
 
 //if-statements
-ifClause: IF BOX_BRACKET_OPEN (boolLiteral | variableReference) BOX_BRACKET_CLOSE OPEN_BRACE (declaration | ifClause)+ CLOSE_BRACE elseClause?;
-elseClause: ELSE OPEN_BRACE (declaration | ifClause)+ CLOSE_BRACE;
+ifClause: IF BOX_BRACKET_OPEN (boolLiteral | variableReference) BOX_BRACKET_CLOSE OPEN_BRACE (declaration | ifClause | variableAssignment)* CLOSE_BRACE elseClause?;
+elseClause: ELSE OPEN_BRACE (declaration | ifClause | variableAssignment)* CLOSE_BRACE;
