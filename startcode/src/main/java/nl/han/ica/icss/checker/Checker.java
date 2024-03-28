@@ -15,21 +15,20 @@ import java.util.HashMap;
 public class Checker {
 
     private IHANLinkedList<HashMap<String, ExpressionType>> variableTypes;
-    private boolean variableAssignmentBranch;
 
     public void check(AST ast) {
         variableTypes = new HANLinkedList<>();
-        variableAssignmentBranch = false;
         checkSemantics(ast.root);
     }
 
+    //controleert de semantische regels
     private void checkSemantics(ASTNode node){
         if(node instanceof Stylesheet | node instanceof Stylerule | node instanceof IfClause ) {
             variableTypes.addFirst(new HashMap<String, ExpressionType>());
         }
 
         checkVariables(node);
-        checkOperationForColorType(node);
+        checkOperationForAllowedType(node);
         checkAddOrSubtractOperationForExpressionType(node);
         checkMultiplyOperationForScalar(node);
         checkIfClauseForBoolean(node);
@@ -46,7 +45,7 @@ public class Checker {
         }
     }
 
-    //Controleer of een variabel een ASS heeft
+    //Controleer of een variabel een ASSignment heeft
     private void checkVariables(ASTNode variable){
         if(variable instanceof VariableAssignment) {
             if (((VariableAssignment) variable).expression != null) {
@@ -73,7 +72,6 @@ public class Checker {
                 case "height":
                     if (expression != ExpressionType.PERCENTAGE & expression != ExpressionType.PIXEL) {
                         declaration.setError("Alleen px of % in width of height");
-                        System.out.println(expression);
                     }
                     break;
                 case "color":
@@ -87,16 +85,19 @@ public class Checker {
     }
 
     //Check of een som geen kleurcode bevat.
-    private void checkOperationForColorType(ASTNode operation){
+    private void checkOperationForAllowedType(ASTNode operation){
         if(operation instanceof Operation){
             for (ASTNode child: operation.getChildren()) {
                 if (child instanceof ColorLiteral) {
                     operation.setError("Geen hex-codes in sommen");
                 }
+                if (child instanceof BoolLiteral){
+                    operation.setError("Geen booleans in sommen");
+                }
             }
         }
     }
-    //hiero
+
     //Check of een optelling of aftrekking van hetzelfde is.
     private void checkAddOrSubtractOperationForExpressionType(ASTNode addOrSubtractOperation){
         if(addOrSubtractOperation instanceof AddOperation || addOrSubtractOperation instanceof SubtractOperation){
@@ -122,11 +123,12 @@ public class Checker {
         if(ifClause instanceof IfClause){
             ExpressionType expressionType = getExpressionTypeFromNode(((IfClause) ifClause).getConditionalExpression());
             if(expressionType != ExpressionType.BOOL){
-                ifClause.setError("Conditie is geen boolean");
+                ifClause.setError("Conditie is geen BOOlean");
             }
         }
     }
 
+    //Haal de expressie type uit een node.
     private ExpressionType getExpressionTypeFromNode(ASTNode node){
        ExpressionType expressionType = getExpressionTypeLiteral(node);
        if(expressionType == ExpressionType.UNDEFINED) {
@@ -138,6 +140,7 @@ public class Checker {
        return expressionType;
     }
 
+    //haalt de expression type uit een variabele
     private ExpressionType getExpressionTypeFromVariableReference(ASTNode variableReference){
         ExpressionType expression = ExpressionType.UNDEFINED;
         for (int i = 0; i < variableTypes.getSize(); i++){
@@ -149,6 +152,7 @@ public class Checker {
         return expression;
     }
 
+    //haalt de expression type uit een rekensom
     private ExpressionType getExpressionTypeFromOperation(ASTNode operation){
         ExpressionType expression = ExpressionType.UNDEFINED;
         if(operation instanceof Operation) {
@@ -172,6 +176,7 @@ public class Checker {
         return expression;
     }
 
+    //haalt de expression type uit een literal
     private ExpressionType getExpressionTypeLiteral(ASTNode node){
         if (node instanceof BoolLiteral) {
             return ExpressionType.BOOL;

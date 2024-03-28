@@ -65,7 +65,7 @@ public class Evaluator implements Transform {
             if (((IfClause) node).conditionalExpression instanceof BoolLiteral) {
                 if (((BoolLiteral) ((IfClause) node).conditionalExpression).value) {
                     for (ASTNode ifClauseBody : ((IfClause) node).body) {
-                        if (ifClauseBody instanceof Declaration) {
+                        if (ifClauseBody instanceof Declaration | ifClauseBody instanceof IfClause) {
                             body.add(ifClauseBody);
                         }
                     }
@@ -77,7 +77,8 @@ public class Evaluator implements Transform {
                     }
                 }
                 if (!body.isEmpty()) {
-                    currentStylerule.body.addAll(body);
+                    int index = currentStylerule.body.indexOf(node);
+                    currentStylerule.body.addAll(index, body);
                 }
             }
             currentStylerule.body.remove(node);
@@ -157,6 +158,7 @@ public class Evaluator implements Transform {
             literal = new PixelLiteral(valueRight);
         } else {
             valueRight = ((ScalarLiteral) literalRight).value;
+            literal = new ScalarLiteral(valueRight);
         }
 
         if(literalLeft instanceof PercentageLiteral){
@@ -167,10 +169,13 @@ public class Evaluator implements Transform {
             literal = new PixelLiteral(valueLeft);
         } else {
             valueLeft = ((ScalarLiteral) literalLeft).value;
+            literal = new ScalarLiteral(valueLeft);
         }
 
         if(node instanceof MultiplyOperation){
-            if(literalRight instanceof PixelLiteral || literalLeft instanceof PixelLiteral){
+            if(literalRight instanceof ScalarLiteral & literalLeft instanceof ScalarLiteral){
+                literal = new ScalarLiteral(valueLeft * valueRight);
+            } else if (literalRight instanceof PixelLiteral || literalLeft instanceof PixelLiteral){
                 literal = new PixelLiteral(valueLeft * valueRight);
             } else {
                 literal = new PercentageLiteral(valueLeft * valueRight);
