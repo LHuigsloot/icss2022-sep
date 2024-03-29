@@ -8,9 +8,6 @@ import nl.han.ica.icss.ast.Stylerule;
 import nl.han.ica.icss.ast.literals.ColorLiteral;
 import nl.han.ica.icss.ast.literals.PercentageLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
-import nl.han.ica.icss.ast.selectors.ClassSelector;
-import nl.han.ica.icss.ast.selectors.IdSelector;
-import nl.han.ica.icss.ast.selectors.TagSelector;
 
 public class Generator {
 
@@ -24,22 +21,12 @@ public class Generator {
 	private String printer(ASTNode node){
 		for(ASTNode stylerule : node.getChildren()) {
 			if (stylerule instanceof Stylerule) {
-				for (ASTNode selectors : ((Stylerule) stylerule).selectors){
-					if(selectors instanceof ClassSelector){
-						string += ((ClassSelector) selectors).cls;
-					} else if(selectors instanceof IdSelector){
-						string += ((IdSelector) selectors).id;
-					} else if(selectors instanceof TagSelector){
-						string += ((TagSelector) selectors).tag;
-					}
+				for (ASTNode selector : ((Stylerule) stylerule).selectors){
+					string += (selector.toString() + " {\n");
 				}
-				string += " {";
-				string += "\n";
 				for (ASTNode declaration : stylerule.getChildren()) {
 					if (declaration instanceof Declaration) {
-						string += "  ";
-						string += ((Declaration) declaration).property.name;
-						string += ": ";
+						string += ("  " + ((Declaration) declaration).property.name + ": ");
 						if(((Declaration) declaration).expression instanceof PixelLiteral){
 							string += ((PixelLiteral) ((Declaration) declaration).expression).value;
 							string += "px";
@@ -54,8 +41,7 @@ public class Generator {
 						string += ";\n";
 					}
 				}
-				string += "}";
-				string += "\n";
+				string += "}\n";
 			}
 		}
 		return string;
