@@ -28,10 +28,8 @@ public class Checker {
         }
 
         checkVariables(node);
-        checkOperationForAllowedType(node);
-        checkAddOrSubtractOperationForExpressionType(node);
-        checkMultiplyOperationForScalar(node);
-        checkIfClauseForBoolean(node);
+        checkOperation(node);
+        checkIfClause(node);
         checkDeclaration(node);
 
         for(ASTNode childNode: node.getChildren()){
@@ -45,7 +43,7 @@ public class Checker {
         }
     }
 
-    //Controleer of een variabel een ASSignment heeft
+    //Controleer of een variabel een assignment heeft
     private void checkVariables(ASTNode variable){
         if(variable instanceof VariableAssignment) {
             if (((VariableAssignment) variable).expression != null) {
@@ -84,16 +82,23 @@ public class Checker {
         }
     }
 
+    private void checkOperation(ASTNode node){
+        if(node instanceof Operation){
+            Operation operation = (Operation) node;
+            checkMultiplyOperationForScalar(operation);
+            checkAddOrSubtractOperationForExpressionType(operation);
+            checkOperationForAllowedType(operation);
+        }
+    }
+
     //Check of een som geen kleurcode bevat.
-    private void checkOperationForAllowedType(ASTNode operation){
-        if(operation instanceof Operation){
-            for (ASTNode child: operation.getChildren()) {
-                if (child instanceof ColorLiteral) {
-                    operation.setError("Geen hex-codes in sommen");
-                }
-                if (child instanceof BoolLiteral){
-                    operation.setError("Geen booleans in sommen");
-                }
+    private void checkOperationForAllowedType(Operation operation){
+        for (ASTNode child: operation.getChildren()) {
+            if (child instanceof ColorLiteral) {
+                operation.setError("Geen hex-codes in sommen");
+            }
+            if (child instanceof BoolLiteral){
+                operation.setError("Geen booleans in sommen");
             }
         }
     }
@@ -119,7 +124,7 @@ public class Checker {
     }
 
     //Check of een if-statement een boolean is.
-    private void checkIfClauseForBoolean(ASTNode ifClause){
+    private void checkIfClause(ASTNode ifClause){
         if(ifClause instanceof IfClause){
             ExpressionType expressionType = getExpressionTypeFromNode(((IfClause) ifClause).getConditionalExpression());
             if(expressionType != ExpressionType.BOOL){

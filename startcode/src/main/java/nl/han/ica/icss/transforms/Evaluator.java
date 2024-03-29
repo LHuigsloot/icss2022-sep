@@ -28,10 +28,10 @@ public class Evaluator implements Transform {
     @Override
     public void apply(AST ast) {
         variableValues = new HANLinkedList<>();
-        autobotsRollOut(ast.root);
+        transform(ast.root);
     }
 
-    private void autobotsRollOut(ASTNode node){
+    private void transform(ASTNode node){
         if(node instanceof Stylesheet | node instanceof Stylerule | node instanceof IfClause ) {
             variableValues.addFirst(new HashMap<String, Literal>());
         }
@@ -47,7 +47,7 @@ public class Evaluator implements Transform {
 
         for(ASTNode childNode: node.getChildren()){
             if(!node.getChildren().isEmpty()) {
-                autobotsRollOut(childNode);
+                transform(childNode);
             }
         }
 
